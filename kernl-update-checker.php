@@ -1,5 +1,11 @@
 <?php
 /**
+ *
+ * Kernl Update Checker v2.2.0
+ * https://kernl.us
+ * Derived from:
+ *
+ * **********************************
  * Plugin Update Checker Library 4.10
  * http://w-shadow.com/
  *
