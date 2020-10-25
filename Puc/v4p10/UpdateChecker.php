@@ -7,6 +7,10 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 		protected $updateTransient = '';
 		protected $translationType = ''; //"plugin" or "theme".
 
+		// Kernl Specific
+		public $license = false;
+		public $collectAnalytics = true;
+
 		/**
 		 * Set to TRUE to enable error reporting. Errors are raised using trigger_error()
 		 * and should be logged to the standard PHP error log.
@@ -66,11 +70,11 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 		protected $cachedMetadataHost = 0;
 
 		/**
-		 * @var Puc_v4p10_DebugBar_Extension|null
+		 * @var Puc_v4p9_DebugBar_Extension|null
 		 */
 		protected $debugBarExtension = null;
 
-		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
+		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 2, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));
 			$this->metadataUrl = $metadataUrl;
 			$this->directoryName = $directoryName;
@@ -627,6 +631,68 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 			return true;
 		}
 
+		protected function getDomain() {
+			try {
+				$urlParts = parse_url(get_site_url());
+				$domain = $urlParts['host'];
+			} catch(Exception $err) {
+				$domain = '';
+			}
+			return $domain;
+		}
+
+		protected function getPhpVersion() {
+			try {
+				$phpVersion = phpversion();
+			} catch(Exception $err) {
+				$phpVersion = '';
+			}
+			return $phpVersion;
+		}
+
+		protected function getLanguage() {
+			try {
+				$language = get_bloginfo('language');
+			} catch(Exception $err) {
+				$language = '';
+			}
+			return $language;
+		}
+
+		protected function getPluginInfo($noPlugins = false) {
+			try {
+				if ($noPlugins) {
+					$pluginString = '';
+				} else {
+					if ( ! function_exists( 'get_plugins' ) ) {
+						require_once ABSPATH . 'wp-admin/includes/plugin.php';
+					}
+					$allPlugins = get_plugins();
+					$pluginString = '';
+					foreach ($allPlugins as $pluginPath => $value) {
+						$pluginString = $pluginString . $pluginPath . '|-|' . $value['Name'] . '|-|' . $value['Version'] . '::';
+					}
+				}
+			} catch(Exception $err) {
+				$pluginString = '';
+			}
+			return $pluginString;
+		}
+
+		protected function getThemeInfo() {
+			try {
+				$theme = wp_get_theme();
+				$name = $theme->get('Name');
+				$slug = sanitize_title($name);
+				$version = $theme->get('Version');
+				$theme_data = array($slug, $name, $version);
+				return implode('|-|', $theme_data);
+			} catch (Exception $err) {
+				$themeString = '';
+			}
+			return $themeString;
+		}
+
 		/* -------------------------------------------------------------------
 		 * JSON-based update API
 		 * -------------------------------------------------------------------
@@ -640,13 +706,39 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 		 * @param array $queryArgs Additional query arguments.
 		 * @return array [Puc_v4p10_Metadata|null, array|WP_Error] A metadata instance and the value returned by wp_remote_get().
 		 */
-		protected function requestMetadata($metaClass, $filterRoot, $queryArgs = array()) {
+		protected function requestMetadata($metaClass, $filterRoot, $queryArgs = array(), $noPlugins = false) {
+			// Make a copy of the original queryArgs in case we need to call
+			// this function again without plugin information.
+			$originalQueryArgs = $queryArgs;
+
+			if($this->license) {
+				$queryArgs['license'] = urlencode($this->license);
+			}
+
+			$kernlAnalyticsQueryArgs = array(
+				'domain' => $this->getDomain(),
+				'collectAnalytics' => $this->collectAnalytics,
+				'phpVersion' => $this->getPhpVersion(),
+				'language' => $this->getLanguage(),
+				'plugins' => $this->getPluginInfo($noPlugins),
+				'theme' => $this->getThemeInfo()
+			);
+
+			// Only send analytics data to Kernl if collectAnalytics
+			// is set to true. Default is true.
+			if ($this->collectAnalytics) {
+				$queryArgs = array_merge(
+					$kernlAnalyticsQueryArgs,
+					$queryArgs
+				);
+			}
+
 			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
 			$queryArgs = array_merge(
 				array(
 					'installed_version' => strval($this->getInstalledVersion()),
 					'php' => phpversion(),
-					'locale' => get_locale(),
+					'locale' => get_locale()
 				),
 				$queryArgs
 			);
@@ -668,17 +760,23 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 			}
 
 			$result = wp_remote_get($url, $options);
-
 			$result = apply_filters($this->getUniqueName('request_metadata_http_result'), $result, $url, $options);
-			
+
 			//Try to parse the response
 			$status = $this->validateApiResponse($result);
 			$metadata = null;
 			if ( !is_wp_error($status) ){
-				if ( version_compare(PHP_VERSION, '5.3', '>=') && (strpos($metaClass, '\\') === false) ) {
-					$metaClass = __NAMESPACE__ . '\\' . $metaClass;
-				}
 				$metadata = call_user_func(array($metaClass, 'fromJson'), $result['body']);
+			} else if($this->failedDueToPlugins($result, $noPlugins)) {
+				// This case happens if the end user has too many plugins to be
+				// sent via the query string.
+				$noPlugins = true;
+				return $this->requestMetadata(
+					$metaClass,
+					$filterRoot,
+					$originalQueryArgs,
+					$noPlugins
+				);
 			} else {
 				do_action('puc_api_error', $status, $result, $url, $this->slug);
 				$this->triggerError(
@@ -689,6 +787,18 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 			}
 
 			return array($metadata, $result);
+		}
+
+		private function failedDueToPlugins($result, $noPlugins) {
+			return
+				!is_wp_error($result) &&
+				!$noPlugins &&
+				isset($result['response']) &&
+				isset($result['response']['code']) &&
+				(
+					($result['response']['code'] == 400) ||
+					($result['response']['code'] == 431)
+				);
 		}
 
 		/**
