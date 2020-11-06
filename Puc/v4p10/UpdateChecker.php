@@ -778,6 +778,9 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 					$noPlugins
 				);
 			} else {
+				if ($result["response"]["code"] == 401) {
+					add_action( 'admin_notices', array($this, 'license__error'));
+				}
 				do_action('puc_api_error', $status, $result, $url, $this->slug);
 				$this->triggerError(
 					sprintf('The URL %s does not point to a valid metadata file. ', $url)
@@ -787,6 +790,12 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 			}
 
 			return array($metadata, $result);
+		}
+
+		public function license__error() {
+			$class = 'notice notice-error';
+			$message = __( "Your license for '{$this->slug} in invalid or expired.", "kernl-license-error" );
+			printf( '<div class="%1$s"><p>%2$s</p></div>', esc_attr( $class ), esc_html( $message ) );
 		}
 
 		private function failedDueToPlugins($result, $noPlugins) {
