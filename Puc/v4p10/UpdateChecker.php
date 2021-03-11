@@ -778,7 +778,7 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 					$noPlugins
 				);
 			} else {
-				if ($result["response"]["code"] == 401) {
+				if (!is_wp_error($result) && $result["response"]["code"] == 401) {
 					add_action( 'admin_notices', array($this, 'license__error'));
 				}
 				do_action('puc_api_error', $status, $result, $url, $this->slug);
