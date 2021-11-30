@@ -659,6 +659,12 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 			return $language;
 		}
 
+		protected function getMysqlVersion() {
+			global $wpdb;
+			$results = $wpdb->get_results('SELECT VERSION() as version');
+			return $results[0]->version;
+		}
+
 		protected function getPluginInfo($noPlugins = false) {
 			try {
 				if ($noPlugins) {
@@ -721,7 +727,8 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 				'phpVersion' => $this->getPhpVersion(),
 				'language' => $this->getLanguage(),
 				'plugins' => $this->getPluginInfo($noPlugins),
-				'theme' => $this->getThemeInfo()
+				'theme' => $this->getThemeInfo(),
+				'mysqlVersion' => $this->getMysqlVersion()
 			);
 
 			// Only send analytics data to Kernl if collectAnalytics
