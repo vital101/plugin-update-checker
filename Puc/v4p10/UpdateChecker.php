@@ -721,24 +721,16 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 				$queryArgs['license'] = urlencode($this->license);
 			}
 
-			$kernlAnalyticsQueryArgs = array(
+			$kernlAnalyticsData = array(
 				'domain' => $this->getDomain(),
 				'collectAnalytics' => $this->collectAnalytics,
 				'phpVersion' => $this->getPhpVersion(),
 				'language' => $this->getLanguage(),
 				'plugins' => $this->getPluginInfo($noPlugins),
 				'theme' => $this->getThemeInfo(),
-				'mysqlVersion' => $this->getMysqlVersion()
+				'mysqlVersion' => $this->getMysqlVersion(),
+				'installed_version' => strval($this->getInstalledVersion())
 			);
-
-			// Only send analytics data to Kernl if collectAnalytics
-			// is set to true. Default is true.
-			if ($this->collectAnalytics) {
-				$queryArgs = array_merge(
-					$kernlAnalyticsQueryArgs,
-					$queryArgs
-				);
-			}
 
 			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
 			$queryArgs = array_merge(
@@ -760,13 +752,18 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 			);
 			$options = apply_filters($this->getUniqueName($filterRoot . '_options'), $options);
 
+			// Only send analytics data to Kernl if collectAnalytics
+			// is set to true. Default is true.
+			if ($this->collectAnalytics) {
+				$options["body"] = $kernlAnalyticsData;
+			}
+
 			//The metadata file should be at 'http://your-api.com/url/here/$slug/info.json'
 			$url = $this->metadataUrl;
 			if ( !empty($queryArgs) ){
 				$url = add_query_arg($queryArgs, $url);
 			}
-
-			$result = wp_remote_get($url, $options);
+			$result = wp_remote_post($url, $options);
 			$result = apply_filters($this->getUniqueName('request_metadata_http_result'), $result, $url, $options);
 
 			//Try to parse the response

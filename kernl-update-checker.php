@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * Kernl Update Checker v2.5.0
+ * Kernl Update Checker v2.6.0
  * https://kernl.us
  * Derived from:
  *
