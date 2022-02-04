@@ -8,7 +8,7 @@ if ( !class_exists('Puc_v4p10_Plugin_Ui', false) ):
 		private $manualCheckErrorTransient = '';
 
 		/**
-		 * @param Puc_v4p10_Plugin_UpdateChecker $updateChecker
+		 * @param Kernl_v4p10_Plugin_UpdateChecker $updateChecker
 		 */
 		public function __construct($updateChecker) {
 			$this->updateChecker = $updateChecker;
@@ -163,11 +163,7 @@ if ( !class_exists('Puc_v4p10_Plugin_Ui', false) ):
 					//from working. Maybe the plugin simply doesn't have a readme.
 					//Let's only show important errors.
 					$foundCriticalErrors = false;
-					$questionableErrorCodes = array(
-						'puc-github-http-error',
-						'puc-gitlab-http-error',
-						'puc-bitbucket-http-error',
-					);
+					$questionableErrorCodes = array();
 
 					foreach ($this->lastRequestApiErrors as $item) {
 						$wpError = $item['error'];

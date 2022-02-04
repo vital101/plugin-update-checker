@@ -3,7 +3,7 @@ if ( !class_exists('Puc_v4p10_Scheduler', false) ):
 
 	/**
 	 * The scheduler decides when and how often to check for updates.
-	 * It calls @see Puc_v4p10_UpdateChecker::checkForUpdates() to perform the actual checks.
+	 * It calls @see Kernl_v4p10_UpdateChecker::checkForUpdates() to perform the actual checks.
 	 */
 	class Puc_v4p10_Scheduler {
 		public $checkPeriod = 12; //How often to check for updates (in hours).
@@ -13,7 +13,7 @@ if ( !class_exists('Puc_v4p10_Scheduler', false) ):
 		protected $hourlyCheckHooks = array('load-update.php');
 
 		/**
-		 * @var Puc_v4p10_UpdateChecker
+		 * @var Kernl_v4p10_UpdateChecker
 		 */
 		protected $updateChecker;
 
@@ -22,7 +22,7 @@ if ( !class_exists('Puc_v4p10_Scheduler', false) ):
 		/**
 		 * Scheduler constructor.
 		 *
-		 * @param Puc_v4p10_UpdateChecker $updateChecker
+		 * @param Kernl_v4p10_UpdateChecker $updateChecker
 		 * @param int $checkPeriod How often to check for updates (in hours).
 		 * @param array $hourlyHooks
 		 */
@@ -116,7 +116,7 @@ if ( !class_exists('Puc_v4p10_Scheduler', false) ):
 
 			//Filter out notifications of upgrades that should have no bearing upon whether or not our
 			//current info is up-to-date.
-			if ( is_a($this->updateChecker, 'Puc_v4p10_Theme_UpdateChecker') ) {
+			if ( is_a($this->updateChecker, 'Kernl_v4p10_Theme_UpdateChecker') ) {
 				if ( 'theme' !== $upgradeInfo['type'] || !isset($upgradeInfo['themes']) ) {
 					return;
 				}
@@ -130,7 +130,7 @@ if ( !class_exists('Puc_v4p10_Scheduler', false) ):
 				}
 			}
 
-			if ( is_a($this->updateChecker, 'Puc_v4p10_Plugin_UpdateChecker') ) {
+			if ( is_a($this->updateChecker, 'Kernl_v4p10_Plugin_UpdateChecker') ) {
 				if ( 'plugin' !== $upgradeInfo['type'] || !isset($upgradeInfo['plugins']) ) {
 					return;
 				}

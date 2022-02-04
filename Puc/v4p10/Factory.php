@@ -23,7 +23,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		 *
 		 * @param string $fullPath Full path to the main plugin file or the theme's style.css.
 		 * @param array $args Optional arguments. Keys should match the argument names of the buildUpdateChecker() method.
-		 * @return Puc_v4p10_Plugin_UpdateChecker|Puc_v4p10_Theme_UpdateChecker|Puc_v4p10_Vcs_BaseChecker
+		 * @return Kernl_v4p10_Plugin_UpdateChecker|Kernl_v4p10_Theme_UpdateChecker|Puc_v4p10_Vcs_BaseChecker
 		 */
 		public static function buildFromHeader($fullPath, $args = array()) {
 			$fullPath = self::normalizePath($fullPath);
@@ -52,9 +52,9 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		 * Create a new instance of the update checker.
 		 *
 		 * This method automatically detects if you're using it for a plugin or a theme and chooses
-		 * the appropriate implementation for your update source (JSON file, GitHub, BitBucket, etc).
+		 * the appropriate implementation for your update source (JSON file).
 		 *
-		 * @see Puc_v4p10_UpdateChecker::__construct
+		 * @see Kernl_v4p10_UpdateChecker::__construct
 		 *
 		 * @param string $metadataUrl The URL of the metadata file, a GitHub repository, or another supported update source.
 		 * @param string $fullPath Full path to the main plugin file or to the theme directory.
@@ -62,7 +62,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		 * @param int $checkPeriod How often to check for updates (in hours).
 		 * @param string $optionName Where to store book-keeping info about update checks.
 		 * @param string $muPluginFile The plugin filename relative to the mu-plugins directory.
-		 * @return Puc_v4p10_Plugin_UpdateChecker|Puc_v4p10_Theme_UpdateChecker|Puc_v4p10_Vcs_BaseChecker
+		 * @return Kernl_v4p10_Plugin_UpdateChecker|Kernl_v4p10_Theme_UpdateChecker|Puc_v4p10_Vcs_BaseChecker
 		 */
 		public static function buildUpdateChecker($metadataUrl, $fullPath, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 			$fullPath = self::normalizePath($fullPath);
@@ -217,11 +217,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		private static function getServiceURI($fullPath) {
 			//Look for the URI
 			if ( is_readable($fullPath) ) {
-				$seek = array(
-					'github' => 'GitHub URI',
-					'gitlab' => 'GitLab URI',
-					'bucket' => 'BitBucket URI',
-				);
+				$seek = array();
 				$seek = apply_filters('puc_get_source_uri', $seek);
 				$data = get_file_data($fullPath, $seek);
 				foreach ($data as $key => $uri) {
@@ -251,17 +247,8 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 			$path = parse_url($metadataUrl, PHP_URL_PATH);
 
 			//Check if the path looks like "/user-name/repository".
-			//For GitLab.com it can also be "/user/group1/group2/.../repository".
-			$repoRegex = '@^/?([^/]+?)/([^/#?&]+?)/?$@';
-			if ( $host === 'gitlab.com' ) {
-				$repoRegex = '@^/?(?:[^/#?&]++/){1,20}(?:[^/#?&]++)/?$@';
-			}
 			if ( preg_match($repoRegex, $path) ) {
-				$knownServices = array(
-					'github.com' => 'GitHub',
-					'bitbucket.org' => 'BitBucket',
-					'gitlab.com' => 'GitLab',
-				);
+				$knownServices = array();
 				if ( isset($knownServices[$host]) ) {
 					$service = $knownServices[$host];
 				}

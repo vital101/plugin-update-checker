@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4p10_Theme_UpdateChecker', false) ):
+if ( !class_exists('Kernl_v4p10_Theme_UpdateChecker', false) ):
 
-	class Puc_v4p10_Theme_UpdateChecker extends Puc_v4p10_UpdateChecker {
+	class Kernl_v4p10_Theme_UpdateChecker extends Kernl_v4p10_UpdateChecker {
 		protected $filterSuffix = 'theme';
 		protected $updateTransient = 'update_themes';
 		protected $translationType = 'theme';

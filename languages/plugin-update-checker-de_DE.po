@@ -16,10 +16,6 @@ msgstr ""
 "Language: de_DE\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: github-checker.php:137
-msgid "There is no changelog available."
-msgstr "Es ist keine Liste von Programmänderungen verfügbar."
-
 #: plugin-update-checker.php:852
 msgid "Check for updates"
 msgstr "Nach Update suchen"

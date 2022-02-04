@@ -4,7 +4,7 @@ if ( !class_exists('Puc_v4p10_DebugBar_Extension', false) ):
 	class Puc_v4p10_DebugBar_Extension {
 		const RESPONSE_BODY_LENGTH_LIMIT = 4000;
 
-		/** @var Puc_v4p10_UpdateChecker */
+		/** @var Kernl_v4p10_UpdateChecker */
 		protected $updateChecker;
 		protected $panelClass = 'Puc_v4p10_DebugBar_Panel';
 

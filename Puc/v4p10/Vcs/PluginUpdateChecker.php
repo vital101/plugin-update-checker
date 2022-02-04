@@ -1,7 +1,7 @@
 <?php
-if ( !class_exists('Puc_v4p10_Vcs_PluginUpdateChecker') ):
+if ( !class_exists('Kernl_v4p10_Vcs_PluginUpdateChecker') ):
 
-	class Puc_v4p10_Vcs_PluginUpdateChecker extends Puc_v4p10_Plugin_UpdateChecker implements Puc_v4p10_Vcs_BaseChecker {
+	class Kernl_v4p10_Vcs_PluginUpdateChecker extends Kernl_v4p10_Plugin_UpdateChecker implements Puc_v4p10_Vcs_BaseChecker {
 		/**
 		 * @var string The branch where to look for updates. Defaults to "master".
 		 */
@@ -13,7 +13,7 @@ if ( !class_exists('Puc_v4p10_Vcs_PluginUpdateChecker') ):
 		protected $api = null;
 
 		/**
-		 * Puc_v4p10_Vcs_PluginUpdateChecker constructor.
+		 * Kernl_v4p10_Vcs_PluginUpdateChecker constructor.
 		 *
 		 * @param Puc_v4p10_Vcs_Api $api
 		 * @param string $pluginFile

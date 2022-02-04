@@ -1,5 +1,5 @@
 <?php
-if ( !class_exists('Puc_v4p10_Plugin_UpdateChecker', false) ):
+if ( !class_exists('Kernl_v4p10_Plugin_UpdateChecker', false) ):
 
 	/**
 	 * A custom plugin update checker.
@@ -8,7 +8,7 @@ if ( !class_exists('Puc_v4p10_Plugin_UpdateChecker', false) ):
 	 * @copyright 2018
 	 * @access public
 	 */
-	class Puc_v4p10_Plugin_UpdateChecker extends Puc_v4p10_UpdateChecker {
+	class Kernl_v4p10_Plugin_UpdateChecker extends Kernl_v4p10_UpdateChecker {
 		protected $updateTransient = 'update_plugins';
 		protected $translationType = 'plugin';
 

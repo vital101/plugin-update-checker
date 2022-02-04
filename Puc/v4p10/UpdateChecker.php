@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
+if ( !class_exists('Kernl_v4p10_UpdateChecker', false) ):
 
-	abstract class Puc_v4p10_UpdateChecker {
+	abstract class Kernl_v4p10_UpdateChecker {
 		protected $filterSuffix = '';
 		protected $updateTransient = '';
 		protected $translationType = ''; //"plugin" or "theme".
