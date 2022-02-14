@@ -246,14 +246,6 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 			$host = parse_url($metadataUrl, PHP_URL_HOST);
 			$path = parse_url($metadataUrl, PHP_URL_PATH);
 
-			//Check if the path looks like "/user-name/repository".
-			if ( preg_match($repoRegex, $path) ) {
-				$knownServices = array();
-				if ( isset($knownServices[$host]) ) {
-					$service = $knownServices[$host];
-				}
-			}
-
 			return apply_filters('puc_get_vcs_service', $service, $host, $path, $metadataUrl);
 		}
 

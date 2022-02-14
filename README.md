@@ -5,6 +5,7 @@ The Kernl.us update checker. For more information, please see https://kernl.us
 
 ### Changelog
 
+- **3.0.1** - Fixes a PHP notice that was accidentally introduced in version 3.0.0
 - **3.0.0** - Refactored to prevent naming collisions with other plugins/themes that may use the un-modified version of the PUC library. Removed dead code.
 - **2.6.0** - Update check requests now use POST instead of GET. When Kernl Analytics is enabled it is possible to send a querystring larger than is allowed on some servers. This resolves the issue by sending the data as an HTTP POST body.
 - **2.5.0** - Adding support for capturing MySQL/MariaDB version for Kernl Analytics.
