@@ -23,7 +23,7 @@ if ( !class_exists('Kernl_v4p10_Autoloader', false) ):
 			$this->staticMap = array(
 				'PucReadmeParser' => 'vendor/PucReadmeParser.php',
 				'Parsedown' => 'vendor/Parsedown.php',
-				'Puc_v4_Factory' => 'Puc/v4/Factory.php',
+				'Puc_v4_FactoryKernl' => 'Puc/v4/Factory.php',
 			);
 
 			spl_autoload_register(array($this, 'autoload'));

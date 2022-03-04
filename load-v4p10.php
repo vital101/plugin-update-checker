@@ -16,9 +16,9 @@ foreach (
 	)
 	as $pucGeneralClass => $pucVersionedClass
 ) {
-	Puc_v4_Factory::addVersion($pucGeneralClass, $pucVersionedClass, '4.10');
+	Puc_v4_FactoryKernl::addVersion($pucGeneralClass, $pucVersionedClass, '4.10');
 	//Also add it to the minor-version factory in case the major-version factory
 	//was already defined by another, older version of the update checker.
-	Puc_v4p10_Factory::addVersion($pucGeneralClass, $pucVersionedClass, '4.10');
+	Puc_v4p10_FactoryKernl::addVersion($pucGeneralClass, $pucVersionedClass, '4.10');
 }
 

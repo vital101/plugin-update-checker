@@ -170,8 +170,8 @@ if ( !class_exists('Puc_v4p10_Plugin_Package', false) ):
 				$pluginPath  = realpath($this->pluginAbsolutePath);
 				//If realpath() fails, just normalize the syntax instead.
 				if (($muPluginDir === false) || ($pluginPath === false)) {
-					$muPluginDir = Puc_v4p10_Factory::normalizePath(WPMU_PLUGIN_DIR);
-					$pluginPath  = Puc_v4p10_Factory::normalizePath($this->pluginAbsolutePath);
+					$muPluginDir = Puc_v4p10_FactoryKernl::normalizePath(WPMU_PLUGIN_DIR);
+					$pluginPath  = Puc_v4p10_FactoryKernl::normalizePath($this->pluginAbsolutePath);
 				}
 
 				$cachedResult = (strpos($pluginPath, $muPluginDir) === 0);
