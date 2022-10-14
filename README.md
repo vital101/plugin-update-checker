@@ -5,7 +5,7 @@ The Kernl.us update checker. For more information, please see https://kernl.us
 
 ### Changelog
 
-- **4.0.0-beta** - Merges 1.5 years of upstream improvements and removes the naming collision work that was introduced in 3.1.0. The package now supports scoping with [PHP Scoper](https://github.com/humbug/php-scoper) to prevent naming collisions. You will need to change your Kernl instantiation from `Puc_v4_FactoryKernl` to `Puc_v4_Factory`.
+- **4.0.0** - Merges 1.5 years of upstream improvements and removes the naming collision work that was introduced in 3.1.0. The package now supports scoping with [PHP Scoper](https://github.com/humbug/php-scoper) to prevent naming collisions. You will need to change your Kernl instantiation from `Puc_v4_FactoryKernl` to `Puc_v4_Factory`.
 - **3.1.0** - Changes instantiation to prevent naming collisions.
 - **3.0.1** - Fixes a PHP notice that was accidentally introduced in version 3.0.0
 - **3.0.0** - Refactored to prevent naming collisions with other plugins/themes that may use the un-modified version of the PUC library. Removed dead code.
