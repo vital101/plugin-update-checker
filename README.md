@@ -5,6 +5,7 @@ The Kernl.us update checker. For more information, please see https://kernl.us
 
 ### Changelog
 
+- **4.0.1** - Fixes a bug with license validation from domain details being sent via the POST body instead of the query string.
 - **4.0.0** - Merges 1.5 years of upstream improvements and removes the naming collision work that was introduced in 3.1.0. The package now supports scoping with [PHP Scoper](https://github.com/humbug/php-scoper) to prevent naming collisions. You will need to change your Kernl instantiation from `Puc_v4_FactoryKernl` to `Puc_v4_Factory`.
 - **3.1.0** - Changes instantiation to prevent naming collisions.
 - **3.0.1** - Fixes a PHP notice that was accidentally introduced in version 3.0.0

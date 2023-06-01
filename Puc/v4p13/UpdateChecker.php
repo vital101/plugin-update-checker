@@ -721,8 +721,11 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 				$queryArgs['license'] = urlencode($this->license);
 			}
 
+			// Send the domain for license validation.
+			$queryArgs['domain'] = urlencode($this->getDomain());
+
+			// Analytics data if enabled.
 			$kernlAnalyticsData = array(
-				'domain' => $this->getDomain(),
 				'collectAnalytics' => $this->collectAnalytics,
 				'phpVersion' => $this->getPhpVersion(),
 				'language' => $this->getLanguage(),
