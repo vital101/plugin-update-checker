@@ -361,7 +361,7 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 		 *
 		 * @param Puc_v4p13_Metadata|null $update
 		 */
-		protected function fixSupportedWordpressVersion(Puc_v4p13_Metadata $update = null) {
+		protected function fixSupportedWordpressVersion(?Puc_v4p13_Metadata $update = null) {
 			if ( !isset($update->tested) || !preg_match('/^\d++\.\d++$/', $update->tested) ) {
 				return;
 			}
