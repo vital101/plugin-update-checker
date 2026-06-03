@@ -10,6 +10,7 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 		// Kernl Specific
 		public $license = false;
 		public $collectAnalytics = true;
+		public $alwaysReturnUpdate = false;
 
 		/**
 		 * Set to TRUE to enable error reporting. Errors are raised using trigger_error()
@@ -719,6 +720,10 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 
 			if($this->license) {
 				$queryArgs['license'] = urlencode($this->license);
+			}
+
+			if($this->alwaysReturnUpdate === true) {
+				$queryArgs['alwaysReturnUpdate'] = '1';
 			}
 
 			// Send the domain for license validation.
