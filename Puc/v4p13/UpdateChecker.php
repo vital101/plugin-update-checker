@@ -147,6 +147,9 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 				add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
 			}
 
+			//Verify the SHA-256 checksum of downloaded updates before installing them.
+			add_filter('upgrader_pre_download', array($this, 'verifyDownloadChecksum'), 20, 4);
+
 			//Allow HTTP requests to the metadata URL even if it's on a local host.
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
 
@@ -171,6 +174,7 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 
 			remove_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10);
 			remove_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10);
+			remove_filter('upgrader_pre_download', array($this, 'verifyDownloadChecksum'), 20);
 			remove_action('plugins_loaded', array($this, 'maybeInitDebugBar'));
 
 			remove_action('init', array($this, 'loadTextDomain'));
@@ -1100,6 +1104,194 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 
 			//Assume it's fine.
 			return false;
+		}
+
+		/* -------------------------------------------------------------------
+		 * Update checksum verification
+		 * -------------------------------------------------------------------
+		 */
+
+		/**
+		 * Verify the SHA-256 checksum of a downloaded update before letting WordPress install it.
+		 *
+		 * Checksum verification is optional: it only happens when the update metadata includes
+		 * a "sha256" field. Updates without a checksum are downloaded and installed normally.
+		 *
+		 * This is a hook callback for the "upgrader_pre_download" filter. Returning a string
+		 * short-circuits WordPress' own download (the local file is used instead), returning
+		 * a WP_Error aborts the update, and returning false lets WordPress proceed as usual.
+		 *
+		 * @access public
+		 *
+		 * @param bool|string|WP_Error $reply The value returned by previously-registered filters.
+		 * @param string $package The URL (or local path) WordPress is about to download.
+		 * @param WP_Upgrader $upgrader
+		 * @param array $hookExtra
+		 * @return bool|string|WP_Error
+		 */
+		public function verifyDownloadChecksum($reply, $package, $upgrader = null, $hookExtra = array()) {
+			//Another filter already replaced or rejected the download - don't interfere.
+			if ( ($reply !== false) || !is_string($package) ) {
+				return $reply;
+			}
+
+			//Only verify packages that belong to one of our updates.
+			$update = $this->getUpdateForPackage($package, $hookExtra);
+			if ( !isset($update) ) {
+				return false;
+			}
+
+			//Checksum verification is optional. If the metadata doesn't include a checksum,
+			//let WordPress handle the download as usual.
+			if ( empty($update->sha256) ) {
+				return false;
+			}
+
+			//Validate the published checksum before downloading anything.
+			$expectedChecksum = is_string($update->sha256) ? strtolower(trim($update->sha256)) : '';
+			if ( !preg_match('/^[a-f0-9]{64}$/', $expectedChecksum) ) {
+				return new WP_Error(
+					'puc_invalid_checksum',
+					sprintf(
+						'The update metadata for %s contains an invalid SHA-256 checksum. The update was aborted.',
+						htmlentities($this->slug)
+					)
+				);
+			}
+
+			//Verify that we can actually compute checksums before downloading anything.
+			if ( !function_exists('hash_file') ) {
+				return new WP_Error(
+					'puc_checksum_unverifiable',
+					'The PHP hash extension is not available, so the update checksum could not be verified. The update was aborted.'
+				);
+			}
+
+			//Remote URL or local file path? WP_Upgrader::download_package() uses the same
+			//check to decide whether the package needs to be downloaded at all.
+			$isRemotePackage = (preg_match('!^(http|https|ftp)://!i', $package) === 1);
+			$isOwnTempFile = false;
+
+			if ( $isRemotePackage ) {
+				if ( !function_exists('download_url') ) {
+					//The WP upgrader API isn't loaded, so the update cannot be verified. Fail closed.
+					return new WP_Error(
+						'puc_checksum_unverifiable',
+						'The WordPress file API is not available, so the update checksum could not be verified. The update was aborted.'
+					);
+				}
+
+				//Download the package ourselves so that we can verify it before installation.
+				$localFile = download_url($package, 300);
+				if ( is_wp_error($localFile) ) {
+					return $localFile;
+				}
+				$isOwnTempFile = true;
+			} else {
+				//The package is a local file path. It will be verified in place; WordPress
+				//returns local files untouched and won't delete them.
+				if ( !file_exists($package) ) {
+					//Let WordPress report the missing file.
+					return false;
+				}
+				$localFile = $package;
+			}
+
+			$actualChecksum = hash_file('sha256', $localFile);
+			if ( !is_string($actualChecksum) ) {
+				if ( $isOwnTempFile ) {
+					@unlink($localFile);
+				}
+				return new WP_Error(
+					'puc_checksum_unverifiable',
+					sprintf(
+						'The SHA-256 checksum of the downloaded update for %s could not be computed. The update was aborted.',
+						htmlentities($this->slug)
+					)
+				);
+			}
+			$actualChecksum = strtolower($actualChecksum);
+
+			if ( !$this->checksumsMatch($expectedChecksum, $actualChecksum) ) {
+				if ( $isOwnTempFile ) {
+					@unlink($localFile);
+				}
+				return new WP_Error(
+					'puc_checksum_mismatch',
+					sprintf(
+						'The downloaded update for %s does not match the published SHA-256 checksum. The update was aborted.',
+						htmlentities($this->slug)
+					)
+				);
+			}
+
+			//The checksum is correct. Give the verified file to WordPress so that it
+			//doesn't download the package a second time.
+			return $localFile;
+		}
+
+		/**
+		 * Find the update that corresponds to the package WordPress is about to download.
+		 *
+		 * WordPress 5.5 and later pass the plugin/theme key in $hookExtra, which identifies
+		 * the item being upgraded even if another filter has changed the package URL.
+		 * Older versions don't pass $hookExtra at all, so fall back to matching the URL
+		 * exactly - if another filter rewrites the URL on those versions, verification
+		 * is skipped.
+		 *
+		 * The update comes from the checker's in-memory state, which was also used to
+		 * build the update transient for the current request, so the package URL and
+		 * checksum cannot get out of sync within a single request.
+		 *
+		 * @param string $package
+		 * @param array $hookExtra
+		 * @return Puc_v4p13_Update|null
+		 */
+		protected function getUpdateForPackage($package, $hookExtra) {
+			$update = $this->updateState->getUpdate();
+			if ( !isset($update) ) {
+				return null;
+			}
+
+			$isIdentityMatch = false;
+			$hasIdentity = false;
+
+			if ( is_array($hookExtra) ) {
+				if ( $this->translationType === 'theme' ) {
+					if ( isset($hookExtra['theme']) ) {
+						$hasIdentity = true;
+						$isIdentityMatch = ($hookExtra['theme'] === $this->getUpdateListKey());
+					}
+				} else if ( isset($hookExtra['plugin']) ) {
+					$hasIdentity = true;
+					$isIdentityMatch = ($hookExtra['plugin'] === $this->getUpdateListKey());
+				}
+			}
+
+			if ( $hasIdentity ) {
+				return $isIdentityMatch ? $update : null;
+			}
+
+			//No identity information available. Fall back to the exact package URL.
+			if ( isset($update->download_url) && ($update->download_url === $package) ) {
+				return $update;
+			}
+
+			return null;
+		}
+
+		/**
+		 * Compare two checksums in a timing-safe manner when possible.
+		 *
+		 * @param string $expected
+		 * @param string $actual
+		 * @return bool
+		 */
+		protected function checksumsMatch($expected, $actual) {
+			if ( function_exists('hash_equals') ) {
+				return hash_equals($expected, $actual);
+			}
+			return $expected === $actual;
 		}
 
 		/* -------------------------------------------------------------------

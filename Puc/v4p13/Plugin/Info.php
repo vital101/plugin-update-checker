@@ -18,6 +18,11 @@ if ( !class_exists('Puc_v4p13_Plugin_Info', false) ):
 		public $sections = array();
 		public $download_url;
 
+		/**
+		 * @var string Optional. SHA-256 hex hash of the update package (see Puc_v4p13_Update::$sha256).
+		 */
+		public $sha256;
+
 		public $banners;
 		public $icons = array();
 		public $translations = array();
