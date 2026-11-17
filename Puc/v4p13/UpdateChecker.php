@@ -646,6 +646,22 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 			return $domain;
 		}
 
+		/**
+		 * The WordPress environment type (e.g. "production", "staging",
+		 * "development", "local"). Kernl uses this to classify the site as a
+		 * dev/staging install so those sites don't consume license activation
+		 * seats. Requires WordPress 5.5+; older versions report "production".
+		 *
+		 * @return string
+		 */
+		protected function getEnvironmentType() {
+			if ( function_exists('wp_get_environment_type') ) {
+				$environmentType = wp_get_environment_type();
+				return is_string($environmentType) ? $environmentType : 'production';
+			}
+			return 'production';
+		}
+
 		protected function getPhpVersion() {
 			try {
 				$phpVersion = phpversion();
@@ -732,6 +748,10 @@ if ( !class_exists('Puc_v4p13_UpdateChecker', false) ):
 
 			// Send the domain for license validation.
 			$queryArgs['domain'] = urlencode($this->getDomain());
+
+			// Send the WordPress environment type so Kernl can classify
+			// dev/staging sites (they don't consume license activation seats).
+			$queryArgs['env'] = urlencode($this->getEnvironmentType());
 
 			// Analytics data if enabled.
 			$kernlAnalyticsData = array(

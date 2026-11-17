@@ -5,6 +5,7 @@ The Kernl.us update checker. For more information, please see https://kernl.us
 
 ### Changelog
 
+- **4.3.0** - Sends the WordPress environment type (`wp_get_environment_type()`) as the `env` query parameter on update checks. Kernl uses it to classify dev/staging sites so they don't consume license activation seats, even when the site's domain doesn't match a known dev/staging pattern.
 - **4.2.0** - Adds ability to verify integrity of downloaded update when checksum is returned with the update payload.
 - **4.1.0** - Added `alwaysReturnUpdate` property to optionally return update metadata with a 200 status even when license validation fails (empty `download_url`).
 - **4.0.2** - Minor change to function param signature to support PHP 8+
